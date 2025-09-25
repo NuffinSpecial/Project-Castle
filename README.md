@@ -29,6 +29,19 @@ machine translation model or using a curated HandSpeak dictionary).
    python main.py "I will eat an apple tomorrow"
    ```
 
+## Web interface
+
+A polished single-page interface is available through Flask. After installing
+the dependencies you can run the development server with:
+
+```bash
+flask --app web_app run --debug
+```
+
+The application will be available at http://127.0.0.1:5000/ where you can enter
+sentences, view the generated gloss, and open the HandSpeak references in new
+tabs.
+
 The CLI accepts multiple sentences as positional arguments and can read from a
 file using `--file`. The output is JSON and includes the gloss tokens and the
 HandSpeak links for each token.
