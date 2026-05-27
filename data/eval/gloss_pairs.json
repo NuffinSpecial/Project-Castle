@@ -1,0 +1,34 @@
+[
+  {
+    "sentence": "I will eat an apple tomorrow",
+    "gloss": ["FUTURE", "ME", "EAT", "APPLE"]
+  },
+  {
+    "sentence": "I will not go",
+    "gloss": ["FUTURE", "ME", "NOT++", "GO"]
+  },
+  {
+    "sentence": "thank you",
+    "gloss": ["THANK-YOU"]
+  },
+  {
+    "sentence": "We go to school on Monday",
+    "gloss": ["MONDAY", "WE", "GO", "SCHOOL"]
+  },
+  {
+    "sentence": "She wants coffee now",
+    "gloss": ["NOW", "SHE", "WANT", "COFFEE"]
+  },
+  {
+    "sentence": "why would you want to go over there?",
+    "gloss": ["YOU", "WANT", "GO", "THERE", "WHY"]
+  },
+  {
+    "sentence": "Where are you going?",
+    "gloss": ["YOU", "GO", "WHERE"]
+  },
+  {
+    "sentence": "can you?",
+    "gloss": ["YOU", "CAN", "YN-Q"]
+  }
+]
