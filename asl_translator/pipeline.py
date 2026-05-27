@@ -1,8 +1,9 @@
 """High level pipeline for translating English into ASL gloss with links."""
+
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, List, Sequence
 
 from .gloss import GlossTranslator
 from .handspeak import HandSpeakLinker
@@ -14,10 +15,10 @@ class TranslationResult:
     """Container for the full translation pipeline output."""
 
     original_sentence: str
-    tokens: List[str]
-    normalized_tokens: List[str]
-    gloss_tokens: List[str]
-    links: List[str]
+    tokens: list[str]
+    normalized_tokens: list[str]
+    gloss_tokens: list[str]
+    links: list[str]
 
 
 class TranslationPipeline:
@@ -45,10 +46,10 @@ class TranslationPipeline:
             links=links,
         )
 
-    def translate_many(self, sentences: Sequence[str]) -> List[TranslationResult]:
+    def translate_many(self, sentences: Sequence[str]) -> list[TranslationResult]:
         return [self.translate(sentence) for sentence in sentences]
 
 
-def run_pipeline(sentences: Iterable[str]) -> List[TranslationResult]:
+def run_pipeline(sentences: Iterable[str]) -> list[TranslationResult]:
     pipeline = TranslationPipeline()
     return pipeline.translate_many(list(sentences))

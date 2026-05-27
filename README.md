@@ -1,5 +1,7 @@
 # ContectualASLTranslator
 
+[![CI](https://github.com/NuffinSpecial/ContectualASLTranslator/actions/workflows/ci.yml/badge.svg)](https://github.com/NuffinSpecial/ContectualASLTranslator/actions/workflows/ci.yml)
+
 AI powered translator that links signs from HandSpeak in context of the English sentence given.
 
 ## Project overview
@@ -16,13 +18,15 @@ machine translation model or using a curated HandSpeak dictionary).
 ## Getting started
 
 1. Create and activate a virtual environment.
-2. Install the dependencies:
+2. Install the dependencies (runtime only, or include dev tools for tests and linting):
    ```bash
    pip install -r requirements.txt
+   # optional, for development:
+   pip install -r requirements-dev.txt
    ```
 3. Run the tests:
    ```bash
-   pytest
+   python -m pytest
    ```
 4. Translate a sentence from the command line:
    ```bash

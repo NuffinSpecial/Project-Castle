@@ -1,13 +1,14 @@
 """Tokenization utilities for the ASL translator pipeline."""
+
 from __future__ import annotations
 
 import re
-from typing import Iterable, List
+from collections.abc import Iterable
 
 _WORD_RE = re.compile(r"[A-Za-z']+")
 
 
-def tokenize(sentence: str) -> List[str]:
+def tokenize(sentence: str) -> list[str]:
     """Tokenise a raw English sentence.
 
     The tokenizer keeps apostrophes that are part of the word (e.g. "don't") and
@@ -23,7 +24,7 @@ def tokenize(sentence: str) -> List[str]:
     return tokens
 
 
-def normalize(tokens: Iterable[str]) -> List[str]:
+def normalize(tokens: Iterable[str]) -> list[str]:
     """Normalize tokens prior to gloss translation."""
 
     return [token.lower() for token in tokens]

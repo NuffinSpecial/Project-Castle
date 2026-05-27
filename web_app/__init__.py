@@ -1,18 +1,18 @@
 """Flask application exposing the ASL translation pipeline via a web UI."""
+
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, List, Sequence
-
-from flask import Flask, jsonify, render_template, request
 
 from asl_translator.pipeline import TranslationPipeline, TranslationResult
+from flask import Flask, jsonify, render_template, request
 
 
-def _sanitize_sentences(raw_sentences: Iterable[str | None]) -> List[str]:
+def _sanitize_sentences(raw_sentences: Iterable[str | None]) -> list[str]:
     """Return a list of trimmed, non-empty sentences."""
 
-    sanitized: List[str] = []
+    sanitized: list[str] = []
     for sentence in raw_sentences:
         if sentence is None:
             continue
@@ -24,10 +24,10 @@ def _sanitize_sentences(raw_sentences: Iterable[str | None]) -> List[str]:
     return sanitized
 
 
-def _format_results(results: Sequence[TranslationResult]) -> List[dict]:
+def _format_results(results: Sequence[TranslationResult]) -> list[dict]:
     """Serialize :class:`TranslationResult` instances to dictionaries."""
 
-    formatted: List[dict] = []
+    formatted: list[dict] = []
     for result in results:
         formatted.append(
             {

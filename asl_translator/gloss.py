@@ -1,8 +1,9 @@
 """Tools to convert normalised English tokens into an ASL gloss."""
+
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List
 
 
 @dataclass
@@ -28,7 +29,7 @@ class GlossConfig:
             "and",
         }
     )
-    substitutions: Dict[str, str] = field(
+    substitutions: dict[str, str] = field(
         default_factory=lambda: {
             "i": "ME",
             "me": "ME",
@@ -69,8 +70,8 @@ class GlossTranslator:
     def __init__(self, config: GlossConfig | None = None) -> None:
         self.config = config or GlossConfig()
 
-    def translate(self, tokens: Iterable[str]) -> List[str]:
-        gloss_tokens: List[str] = []
+    def translate(self, tokens: Iterable[str]) -> list[str]:
+        gloss_tokens: list[str] = []
         for token in tokens:
             if token in self.config.drop_words:
                 continue
@@ -87,7 +88,7 @@ class GlossTranslator:
 
         return self._move_time_expression(gloss_tokens)
 
-    def _move_time_expression(self, tokens: List[str]) -> List[str]:
+    def _move_time_expression(self, tokens: list[str]) -> list[str]:
         """Move simple time indicators to the start of the gloss."""
 
         if not tokens:
@@ -95,9 +96,17 @@ class GlossTranslator:
 
         time_keywords = {"PAST", "NOW", "FUTURE", "YESTERDAY", "TODAY", "TOMORROW"}
         # also allow explicit year/month/day tokens
-        time_tokens = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"}
-        reordered: List[str] = []
-        time_buffer: List[str] = []
+        time_tokens = {
+            "MONDAY",
+            "TUESDAY",
+            "WEDNESDAY",
+            "THURSDAY",
+            "FRIDAY",
+            "SATURDAY",
+            "SUNDAY",
+        }
+        reordered: list[str] = []
+        time_buffer: list[str] = []
 
         for token in tokens:
             if token in time_keywords or token in time_tokens:
