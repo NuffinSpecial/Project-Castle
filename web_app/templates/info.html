@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from '_macros.html' import icon %}
+
+{% set active_page = "info" %}
+
+{% block title %}Info{% endblock %}
+
+{% block main_class %} site-main--centered{% endblock %}
+
+{% block content %}
+  <article class="info-page">
+    <header class="info-page__header">
+      <h1>About the Project</h1>
+    </header>
+
+    <div class="info-page__body">
+      <div class="info-page__hero">
+        <span class="info-page__logo">{{ icon('castle', 64, 'icon--brand') }}</span>
+      </div>
+
+      <div class="info-page__text">
+        <p>
+          <strong>Project Castle</strong> (Contextual ASL Translator) links English sentences to
+          approximate ASL gloss using NLP, then plays <strong>crowdsourced sign videos</strong>
+          contributed by the community.
+        </p>
+        <p>
+          The pipeline tokenises and analyses English (spaCy when available), applies gloss
+          rules and multi-word expressions, then maps each gloss token to a community video when
+          one exists.
+        </p>
+        <p>
+          Built by <strong>NuffinSpecial</strong>. Every sign you submit on the
+          <a href="{{ url_for('submit_page') }}">Submit Translation</a> page is added to the live
+          catalog immediately.
+        </p>
+      </div>
+
+      <ul class="info-highlights">
+        <li>{{ icon('languages', 20) }} English → ASL gloss (NLP + rules)</li>
+        <li>{{ icon('video', 20) }} Community sign video playback</li>
+        <li>{{ icon('users', 20) }} Open to contributors</li>
+      </ul>
+
+      <section class="info-page__contact">
+        <h2>Contact &amp; links</h2>
+        <p>Questions or collaboration: open an issue on GitHub.</p>
+        <ul class="info-page__links">
+          <li>
+            <a href="https://github.com/NuffinSpecial/Project-Castle" target="_blank" rel="noopener noreferrer">
+              {{ icon('link', 16) }} GitHub repository
+            </a>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </article>
+{% endblock %}

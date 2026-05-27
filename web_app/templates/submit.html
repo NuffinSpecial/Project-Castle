@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from '_macros.html' import icon %}
+
+{% set active_page = "submit" %}
+
+{% block title %}Submit Translation{% endblock %}
+
+{% block main_class %} site-main--centered{% endblock %}
+
+{% block content %}
+  <section class="form-card">
+    <h1 class="form-card__title">{{ icon('upload', 28) }} Submit a Translation</h1>
+    <p class="form-card__intro">
+      Help grow the library by contributing an English phrase and a short sign video.
+    </p>
+
+    <ol class="steps-list">
+      <li>{{ icon('languages', 16) }} Enter the English phrase</li>
+      <li>{{ icon('video', 16) }} Attach a clear sign video</li>
+      <li>{{ icon('book', 16) }} Add optional context notes</li>
+    </ol>
+
+    <form id="submission-form" class="submission-form" enctype="multipart/form-data" novalidate>
+      <label class="field">
+        <span class="field__label">English word or phrase</span>
+        <input type="text" name="english" id="english-input" required maxlength="200" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Sign video</span>
+        <input
+          type="file"
+          name="video"
+          id="video-input"
+          accept="video/mp4,video/webm,video/quicktime"
+        />
+        <span class="field__hint">Supported: MP4, WebM, MOV (max 25&nbsp;MB)</span>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Optional notes / context</span>
+        <textarea name="notes" id="notes-input" rows="4" maxlength="1000"></textarea>
+      </label>
+
+      <button type="submit" class="btn btn--primary">
+        {{ icon('upload', 20) }}
+        <span>Submit</span>
+      </button>
+      <p id="submission-message" class="form-message" role="status" hidden></p>
+    </form>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='submit.js') }}" defer></script>
+{% endblock %}

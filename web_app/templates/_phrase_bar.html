@@ -1,0 +1,28 @@
+{% from '_macros.html' import icon %}
+<div class="phrase-bar" data-phrase-bar>
+  <div class="phrase-bar__input-wrap">
+    <span class="phrase-bar__search-icon" aria-hidden="true">{{ icon('search', 20) }}</span>
+    <input
+      type="text"
+      id="phrase-input"
+      class="phrase-bar__input"
+      name="phrase"
+      placeholder="Enter a phrase to translate…"
+      autocomplete="off"
+      aria-label="Phrase to translate"
+      aria-expanded="false"
+      aria-controls="search-history-dropdown"
+    />
+    <ul
+      id="search-history-dropdown"
+      class="search-history"
+      role="listbox"
+      aria-label="Recent searches"
+      hidden
+    ></ul>
+  </div>
+  <button type="button" class="phrase-bar__submit" id="translate-button">
+    {{ icon('languages', 20) }}
+    <span>Translate</span>
+  </button>
+</div>

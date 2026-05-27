@@ -27,6 +27,15 @@ class GlossConfig:
             "did",
             "of",
             "and",
+            "on",
+            "in",
+            "at",
+            "over",  # directional particle in "over there" (locative = THERE)
+            # Tense/mood modals often dropped when gloss already marks time (FUTURE, etc.)
+            "would",
+            "should",
+            "will",
+            "shall",
         }
     )
     substitutions: dict[str, str] = field(
@@ -51,9 +60,40 @@ class GlossConfig:
             "them": "THEY",
             "their": "THEIR",
             "will": "FUTURE",
+            "shall": "FUTURE",
             "yesterday": "PAST",
             "today": "NOW",
             "tomorrow": "FUTURE",
+            "want": "WANT",
+            "wants": "WANT",
+            "wanted": "WANT",
+            "why": "WHY",
+            "what": "WHAT",
+            "when": "WHEN",
+            "where": "WHERE",
+            "who": "WHO",
+            "whom": "WHOM",
+            "whose": "WHOSE",
+            "how": "HOW",
+            "which": "WHICH",
+            "monday": "MONDAY",
+            "tuesday": "TUESDAY",
+            "wednesday": "WEDNESDAY",
+            "thursday": "THURSDAY",
+            "friday": "FRIDAY",
+            "saturday": "SATURDAY",
+            "sunday": "SUNDAY",
+            "there": "THERE",
+            "here": "HERE",
+            "go": "GO",
+            "goes": "GO",
+            "went": "GO",
+            "going": "GO",
+            "can": "CAN",
+            "could": "CAN",
+            "may": "MAY",
+            "must": "MUST",
+            "might": "MIGHT",
         }
     )
     emphasise_negation: bool = True
@@ -62,9 +102,8 @@ class GlossConfig:
 class GlossTranslator:
     """Translate normalised English tokens into a rough ASL gloss.
 
-    The implementation is intentionally rule-based to make it deterministic and
-    extendable. The goal is not to perfectly replicate a human translator but to
-    provide infrastructure for experimentation and future improvements.
+    Rule-based and deterministic; designed to pair with NLP lemmas and a community
+    sign catalog.
     """
 
     def __init__(self, config: GlossConfig | None = None) -> None:
@@ -86,34 +125,14 @@ class GlossTranslator:
 
             gloss_tokens.append(token.upper())
 
-        return self._move_time_expression(gloss_tokens)
+        return self._dedupe_consecutive(gloss_tokens)
 
-    def _move_time_expression(self, tokens: list[str]) -> list[str]:
-        """Move simple time indicators to the start of the gloss."""
-
+    @staticmethod
+    def _dedupe_consecutive(tokens: list[str]) -> list[str]:
         if not tokens:
             return tokens
-
-        time_keywords = {"PAST", "NOW", "FUTURE", "YESTERDAY", "TODAY", "TOMORROW"}
-        # also allow explicit year/month/day tokens
-        time_tokens = {
-            "MONDAY",
-            "TUESDAY",
-            "WEDNESDAY",
-            "THURSDAY",
-            "FRIDAY",
-            "SATURDAY",
-            "SUNDAY",
-        }
-        reordered: list[str] = []
-        time_buffer: list[str] = []
-
-        for token in tokens:
-            if token in time_keywords or token in time_tokens:
-                time_buffer.append(token)
-            else:
-                reordered.append(token)
-
-        if time_buffer:
-            return time_buffer + reordered
-        return tokens
+        deduped = [tokens[0]]
+        for token in tokens[1:]:
+            if token != deduped[-1]:
+                deduped.append(token)
+        return deduped

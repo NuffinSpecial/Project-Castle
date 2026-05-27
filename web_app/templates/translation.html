@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% from '_macros.html' import icon %}
+
+{% set active_page = "home" %}
+
+{% block title %}Translation{% endblock %}
+
+{% block main_class %} site-main--translation{% endblock %}
+
+{% block content %}
+  <section class="phrase-section">
+    <p class="section-eyebrow">{{ icon('search', 16) }} Refine your phrase</p>
+    {% include "_phrase_bar.html" %}
+    <p id="phrase-error" class="phrase-error" role="alert" hidden></p>
+  </section>
+
+  <nav class="page-nav">
+    <a class="page-nav__back" href="{{ url_for('home') }}">
+      {{ icon('arrow-left', 18) }}
+      <span>Back to Home</span>
+    </a>
+  </nav>
+
+  <div class="translation-layout">
+    <section class="translation-output" aria-live="polite">
+      <h2 class="translation-output__label">{{ icon('book', 18) }} ASL Gloss</h2>
+      <p class="translation-output__sentence" id="original-sentence"></p>
+      <div class="gloss-tokens" id="gloss-tokens" role="group" aria-label="Gloss words"></div>
+      <p class="gloss-legend" id="gloss-legend" hidden>
+        <span class="gloss-legend__icon" aria-hidden="true">↔</span>
+        Connected signs may be signed in either order.
+      </p>
+    </section>
+
+    <aside class="tip-card">
+      <h3>{{ icon('hand', 20) }} How to use</h3>
+      <ul>
+        <li>Tokens with a dot have a community video available.</li>
+        <li>Signs linked with ↔ can be signed in either order.</li>
+        <li>Click any gloss word to play the sign below.</li>
+        <li>Missing a sign? Use the link below the player to submit one.</li>
+      </ul>
+    </aside>
+  </div>
+
+  <section class="video-section" aria-label="Sign video player">
+    <div class="video-player" id="video-player">
+      <p class="video-player__sign" id="video-sign-label">Select a gloss word</p>
+      <div class="video-player__screen">
+        <video id="sign-video" class="video-player__video" playsinline preload="metadata"></video>
+        <div class="video-player__placeholder" id="video-placeholder">
+          <span class="video-player__placeholder-icon">{{ icon('video', 48) }}</span>
+          <p>No community video for this sign yet.</p>
+          <a id="sign-missing-link" class="video-player__external" href="{{ url_for('submit_page') }}">
+            {{ icon('upload', 16) }}
+            <span>Submit this sign</span>
+          </a>
+        </div>
+      </div>
+      <div class="video-player__controls">
+        <button type="button" class="control-btn control-btn--icon" id="video-play" aria-label="Play">
+          {{ icon('play', 18) }}
+          <span>Play</span>
+        </button>
+        <button type="button" class="control-btn control-btn--icon" id="video-pause" aria-label="Pause">
+          {{ icon('pause', 18) }}
+          <span>Pause</span>
+        </button>
+        <button type="button" class="control-btn control-btn--icon" id="video-replay" aria-label="Replay">
+          {{ icon('replay', 18) }}
+          <span>Replay</span>
+        </button>
+        <label class="control-speed">
+          <span>Speed</span>
+          <select id="video-speed" aria-label="Playback speed">
+            <option value="0.5">0.5×</option>
+            <option value="0.75">0.75×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.25">1.25×</option>
+            <option value="1.5">1.5×</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='translation.js') }}" defer></script>
+{% endblock %}
