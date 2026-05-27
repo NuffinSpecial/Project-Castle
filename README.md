@@ -73,3 +73,4 @@ HandSpeak links for each token.
 > ⚠️ The gloss produced is intentionally simple and does not aim to fully
 > replicate native ASL grammar. It exists as a foundation for future research
 > and experimentation.
+
