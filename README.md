@@ -69,6 +69,22 @@ The first account registered also becomes admin if no users exist yet. Admins se
 
 For production, set a strong `FLASK_SECRET_KEY` environment variable.
 
+## Public hosting (Render)
+
+This repo includes a `render.yaml` Blueprint and a `Dockerfile`.
+
+- **Render**: create a new Render service from this GitHub repo. Render will detect `render.yaml`,
+  provision a **persistent disk**, and run the app with `gunicorn`.
+- **Persistent data**: submissions + SQLite DB live under `CASTLE_DATA_DIR` (Render sets this to `/var/data`).
+
+After deploy, set these optional env vars in Render to bootstrap your first admin:
+
+```text
+CASTLE_ADMIN_EMAIL=you@example.com
+CASTLE_ADMIN_PASSWORD=your-secure-password
+CASTLE_ADMIN_USERNAME=admin
+```
+
 ## NLP & evaluation
 
 - Analysis: `asl_translator/nlp/analyzer.py`
