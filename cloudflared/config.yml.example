@@ -1,0 +1,8 @@
+tunnel: YOUR_TUNNEL_NAME_OR_ID
+credentials-file: C:\Users\YOUR_USER\.cloudflared\YOUR_TUNNEL_ID.json
+
+ingress:
+  - hostname: castle.yourdomain.com
+    service: http://127.0.0.1:5000
+  - service: http_status:404
+
