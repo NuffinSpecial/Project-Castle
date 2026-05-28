@@ -34,9 +34,6 @@ class CommunitySignCatalog:
         root = data_dir or project_data_dir()
         self._catalog_path = root / "signs" / "catalog.json"
         self._submission_dirs = [root / "submissions"]
-        legacy = Path(__file__).resolve().parents[1] / "web_app" / "data" / "submissions"
-        if legacy.exists():
-            self._submission_dirs.append(legacy)
         self._by_gloss: dict[str, SignEntry] = {}
         self._reload()
 
@@ -61,6 +58,9 @@ class CommunitySignCatalog:
                 continue
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
             if not meta.get("video"):
+                continue
+            status = meta.get("status") or "pending"
+            if status != "approved":
                 continue
             self._register_entry(
                 {

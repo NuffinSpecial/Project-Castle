@@ -38,6 +38,16 @@
   <body>
     <div class="page-backdrop" aria-hidden="true"></div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-stack" aria-live="polite">
+          {% for category, message in messages %}
+            <p class="flash flash--{{ category }}">{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <header class="site-header">
       <a class="site-header__logo" href="{{ url_for('home') }}" aria-label="Project Castle home">
         <span class="site-header__logo-mark">{{ icon('castle', 22, 'icon--logo') }}</span>
@@ -57,7 +67,7 @@
           href="{{ url_for('submit_page') }}"
         >
           {{ icon('upload', 18, 'icon--nav') }}
-          <span>Submit Translation</span>
+          <span>Submit</span>
         </a>
         <a
           class="site-header__link{% if active_page == 'info' %} site-header__link--active{% endif %}"
@@ -66,11 +76,31 @@
           {{ icon('info', 18, 'icon--nav') }}
           <span>Info</span>
         </a>
+        {% if current_user.is_authenticated and current_user.is_admin %}
+          <a
+            class="site-header__link{% if active_page == 'admin' %} site-header__link--active{% endif %}"
+            href="{{ url_for('admin.admin_dashboard') }}"
+          >
+            {{ icon('settings', 18, 'icon--nav') }}
+            <span>Admin</span>
+          </a>
+        {% endif %}
       </nav>
 
-      <a class="site-header__settings" href="{{ url_for('settings_page') }}" aria-label="Settings">
-        {{ icon('settings', 22) }}
-      </a>
+      <div class="site-header__account">
+        {% if current_user.is_authenticated %}
+          <span class="site-header__user">{{ current_user.username }}</span>
+          <form method="post" action="{{ url_for('auth.logout_submit') }}" class="site-header__logout-form">
+            <button type="submit" class="site-header__text-btn">Sign out</button>
+          </form>
+        {% else %}
+          <a class="site-header__text-btn" href="{{ url_for('auth.login_page') }}">Sign in</a>
+          <a class="site-header__text-btn site-header__text-btn--primary" href="{{ url_for('auth.register_page') }}">Register</a>
+        {% endif %}
+        <a class="site-header__settings" href="{{ url_for('settings_page') }}" aria-label="Settings">
+          {{ icon('settings', 22) }}
+        </a>
+      </div>
     </header>
 
     <main class="site-main{% block main_class %}{% endblock %}">
@@ -85,7 +115,9 @@
         </p>
         <nav class="site-footer__nav" aria-label="Footer">
           <a href="{{ url_for('home') }}">Home</a>
-          <a href="{{ url_for('submit_page') }}">Submit</a>
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('submit_page') }}">Submit</a>
+          {% endif %}
           <a href="{{ url_for('info_page') }}">Info</a>
           <a href="{{ url_for('settings_page') }}">Settings</a>
         </nav>

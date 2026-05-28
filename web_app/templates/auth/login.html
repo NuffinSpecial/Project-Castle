@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from '_macros.html' import icon %}
+
+{% set active_page = "auth" %}
+
+{% block title %}Sign in{% endblock %}
+
+{% block main_class %} site-main--centered{% endblock %}
+
+{% block content %}
+  <section class="form-card auth-card">
+    <h1>{{ icon('users', 28) }} Sign in</h1>
+    <p class="form-card__intro">Access your account to submit signs and manage settings.</p>
+
+    <form class="submission-form" method="post" action="{{ url_for('auth.login_submit') }}">
+      <label class="field">
+        <span class="field__label">Email</span>
+        <input type="email" name="email" required autocomplete="email" />
+      </label>
+      <label class="field">
+        <span class="field__label">Password</span>
+        <input type="password" name="password" required autocomplete="current-password" />
+      </label>
+      <button type="submit" class="btn btn--primary">Sign in</button>
+    </form>
+
+    <p class="auth-card__footer">
+      No account?
+      <a href="{{ url_for('auth.register_page') }}">Create one</a>
+    </p>
+  </section>
+{% endblock %}

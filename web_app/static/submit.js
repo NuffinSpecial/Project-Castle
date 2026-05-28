@@ -33,7 +33,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/api/submissions", {
         method: "POST",
         body: formData,
+        credentials: "same-origin",
       });
+      if (response.status === 401) {
+        window.location.href = "/auth/login?next=/submit";
+        return;
+      }
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || "Submission failed.");

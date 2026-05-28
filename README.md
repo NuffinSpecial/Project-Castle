@@ -12,7 +12,7 @@ The pipeline:
 2. **Applies** multi-word expressions and rule-based gloss transfer
 3. **Resolves** each gloss token to a **community-submitted video** when available
 
-Submissions on the web UI are published immediately to the sign catalog—no third-party sign dictionary.
+Submissions on the web UI stay **pending** until an administrator approves them; approved signs join the community catalog—no third-party sign dictionary.
 
 ## Getting started
 
@@ -50,9 +50,24 @@ Open http://127.0.0.1:5000/
 
 ### Crowdsourced signs
 
-- Submit English + video on **Submit Translation** → sign goes live in `data/signs/catalog.json`
-- Videos are served at `/api/signs/<GLOSS>/video`
+- **Register** and **sign in** to submit signs
+- Submit English + video on **Submit Translation** → submission stays **pending** until an admin approves it
+- Videos are served at `/api/signs/<GLOSS>/video` after approval
 - Translation page plays community videos when available; otherwise links to submit
+
+### Accounts & admin review
+
+Set these environment variables before first run to create an administrator:
+
+```bat
+set CASTLE_ADMIN_EMAIL=you@example.com
+set CASTLE_ADMIN_PASSWORD=your-secure-password
+set CASTLE_ADMIN_USERNAME=admin
+```
+
+The first account registered also becomes admin if no users exist yet. Admins see an **Admin** link in the nav to approve or reject pending submissions at `/admin/`.
+
+For production, set a strong `FLASK_SECRET_KEY` environment variable.
 
 ## NLP & evaluation
 

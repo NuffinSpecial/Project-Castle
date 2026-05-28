@@ -32,22 +32,23 @@ def _ensure_environment() -> Path:
         if not python.exists():
             print("Creating virtual environment in .venv …")
             subprocess.check_call([sys.executable, "-m", "venv", str(VENV_DIR)])
-        print("Installing dependencies …")
+
+    print("Installing dependencies …")
+    subprocess.check_call(
+        [str(python), "-m", "pip", "install", "-q", "--upgrade", "pip"],
+        cwd=ROOT,
+    )
+    subprocess.check_call(
+        [str(python), "-m", "pip", "install", "-q", "-r", "requirements.txt"],
+        cwd=ROOT,
+    )
+    try:
         subprocess.check_call(
-            [str(python), "-m", "pip", "install", "-q", "--upgrade", "pip"],
+            [str(python), str(ROOT / "scripts" / "download_nlp_models.py")],
             cwd=ROOT,
         )
-        subprocess.check_call(
-            [str(python), "-m", "pip", "install", "-q", "-r", "requirements.txt"],
-            cwd=ROOT,
-        )
-        try:
-            subprocess.check_call(
-                [str(python), str(ROOT / "scripts" / "download_nlp_models.py")],
-                cwd=ROOT,
-            )
-        except subprocess.CalledProcessError:
-            print("Warning: spaCy model not installed; NLP will use regex fallback.")
+    except subprocess.CalledProcessError:
+        print("Warning: spaCy model not installed; NLP will use regex fallback.")
     return python
 
 

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from '_macros.html' import icon %}
+
+{% set active_page = "auth" %}
+
+{% block title %}Create account{% endblock %}
+
+{% block main_class %} site-main--centered{% endblock %}
+
+{% block content %}
+  <section class="form-card auth-card">
+    <h1>{{ icon('users', 28) }} Create account</h1>
+    <p class="form-card__intro">Register to submit sign videos for the community catalog.</p>
+
+    <form class="submission-form" method="post" action="{{ url_for('auth.register_submit') }}">
+      <label class="field">
+        <span class="field__label">Email</span>
+        <input type="email" name="email" required autocomplete="email" />
+      </label>
+      <label class="field">
+        <span class="field__label">Username</span>
+        <input type="text" name="username" required autocomplete="username" pattern="[A-Za-z0-9_]{3,32}" />
+        <span class="field__hint">3–32 characters: letters, numbers, underscore</span>
+      </label>
+      <label class="field">
+        <span class="field__label">Password</span>
+        <input type="password" name="password" required autocomplete="new-password" minlength="8" />
+      </label>
+      <label class="field">
+        <span class="field__label">Confirm password</span>
+        <input type="password" name="confirm_password" required autocomplete="new-password" minlength="8" />
+      </label>
+      <button type="submit" class="btn btn--primary">Create account</button>
+    </form>
+
+    <p class="auth-card__footer">
+      Already registered?
+      <a href="{{ url_for('auth.login_page') }}">Sign in</a>
+    </p>
+  </section>
+{% endblock %}

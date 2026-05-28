@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from '_macros.html' import icon %}
+
+{% set active_page = "admin" %}
+
+{% block title %}Admin review{% endblock %}
+
+{% block main_class %} site-main--wide{% endblock %}
+
+{% block content %}
+  <section class="admin-header">
+    <h1>{{ icon('settings', 28) }} Submission review</h1>
+    <p class="admin-header__intro">Approve or reject pending community sign submissions.</p>
+  </section>
+
+  <section class="admin-panel">
+    <h2>Pending ({{ pending|length }})</h2>
+    {% if pending %}
+      <div class="admin-list">
+        {% for item in pending %}
+          <article class="admin-card" data-submission-id="{{ item.id }}">
+            <header class="admin-card__header">
+              <h3>{{ item.gloss }}</h3>
+              <span class="admin-card__badge admin-card__badge--pending">Pending</span>
+            </header>
+            <dl class="admin-card__meta">
+              <div><dt>English</dt><dd>{{ item.english }}</dd></div>
+              <div><dt>Submitted</dt><dd>{{ item.submitted_at }}</dd></div>
+              {% if item.submitted_by_username %}
+                <div><dt>By</dt><dd>{{ item.submitted_by_username }}</dd></div>
+              {% endif %}
+              {% if item.notes %}
+                <div><dt>Notes</dt><dd>{{ item.notes }}</dd></div>
+              {% endif %}
+            </dl>
+            {% if item.video %}
+              <video class="admin-card__video" controls preload="metadata" src="{{ url_for('admin.preview_video', submission_id=item.id) }}"></video>
+            {% endif %}
+            <div class="admin-card__actions">
+              <button type="button" class="btn btn--primary admin-approve" data-id="{{ item.id }}">Approve</button>
+              <button type="button" class="btn btn--danger admin-reject" data-id="{{ item.id }}">Reject</button>
+            </div>
+            <label class="field admin-reject-note" hidden>
+              <span class="field__label">Rejection note (optional)</span>
+              <input type="text" class="reject-note-input" placeholder="Reason for rejection" />
+            </label>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="admin-empty">No pending submissions.</p>
+    {% endif %}
+  </section>
+
+  <section class="admin-panel admin-panel--muted">
+    <h2>Recently approved</h2>
+    {% if recent %}
+      <ul class="admin-summary">
+        {% for item in recent %}
+          <li><strong>{{ item.gloss }}</strong> — {{ item.english }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="admin-empty">None yet.</p>
+    {% endif %}
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='admin.js') }}" defer></script>
+{% endblock %}
