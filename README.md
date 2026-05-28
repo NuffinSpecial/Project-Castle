@@ -69,6 +69,84 @@ The first account registered also becomes admin if no users exist yet. Admins se
 
 For production, set a strong `FLASK_SECRET_KEY` environment variable.
 
+## Public hosting (Render)
+
+This repo includes a `render.yaml` Blueprint and a `Dockerfile`.
+
+- **Render**: create a new Render service from this GitHub repo. Render will detect `render.yaml`,
+  provision a **persistent disk**, and run the app with `gunicorn`.
+- **Persistent data**: submissions + SQLite DB live under `CASTLE_DATA_DIR` (Render sets this to `/var/data`).
+
+After deploy, set these optional env vars in Render to bootstrap your first admin:
+
+```text
+CASTLE_ADMIN_EMAIL=you@example.com
+CASTLE_ADMIN_PASSWORD=your-secure-password
+CASTLE_ADMIN_USERNAME=admin
+```
+
+## Self-hosting (Cloudflare Tunnel)
+
+This keeps the app running on your PC and exposes it publicly through Cloudflare without opening router ports.
+
+### Quick start (random public URL)
+
+1. Install `cloudflared` (pick one):
+
+```powershell
+# Option A: winget (then open a NEW PowerShell window)
+winget install --id Cloudflare.cloudflared
+
+# Option B: local copy in this repo (no admin)
+.\scripts\install_cloudflared.ps1
+```
+
+Verify:
+
+```powershell
+cloudflared --version
+```
+
+Optional (only needed for a stable custom hostname later):
+
+```powershell
+cloudflared tunnel login
+```
+
+2. Run the tunnel + local dev server:
+
+```powershell
+.\scripts\cloudflare_tunnel.ps1
+```
+
+Cloudflare prints a public URL in the output (it changes each time in this quick mode).
+
+### Stable domain (recommended)
+
+1. Create a tunnel and configure a hostname (one-time):
+
+```powershell
+cloudflared tunnel create project-castle
+cloudflared tunnel route dns project-castle castle.yourdomain.com
+```
+
+2. Copy `cloudflared/config.yml.example` to `cloudflared/config.yml` and fill in:
+- `tunnel` (name or id)
+- `credentials-file` (path to the generated json)
+- `hostname`
+
+3. Run:
+
+```powershell
+.\dev.bat
+cloudflared tunnel run project-castle
+```
+
+### Notes
+
+- **Persistence**: your SQLite DB + uploaded videos live under `data/` on your machine. Keep your machine on.
+- **Admin**: set `CASTLE_ADMIN_EMAIL`, `CASTLE_ADMIN_PASSWORD`, `CASTLE_ADMIN_USERNAME` in your shell before starting to bootstrap an admin.
+- **Security**: Cloudflare can also add Access policies in front of your app if you want an extra gate.
 ## NLP & evaluation
 
 - Analysis: `asl_translator/nlp/analyzer.py`
