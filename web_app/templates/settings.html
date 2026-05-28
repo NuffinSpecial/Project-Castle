@@ -12,6 +12,23 @@
     <h1>Settings</h1>
 
     <section class="settings-group">
+      <h2>{{ icon('users', 18) }} Account</h2>
+      <dl class="account-dl">
+        <div><dt>Username</dt><dd>{{ current_user.username }}</dd></div>
+        <div><dt>Email</dt><dd>{{ current_user.email }}</dd></div>
+        <div><dt>Role</dt><dd>{% if current_user.is_admin %}Administrator{% else %}Member{% endif %}</dd></div>
+      </dl>
+      <form method="post" action="{{ url_for('auth.logout_submit') }}">
+        <button type="submit" class="btn btn--secondary">Sign out</button>
+      </form>
+      {% if current_user.is_admin %}
+        <p class="settings-note">
+          <a href="{{ url_for('admin.admin_dashboard') }}">Open admin submission review →</a>
+        </p>
+      {% endif %}
+    </section>
+
+    <section class="settings-group">
       <h2>Display</h2>
       <div class="theme-toggle" role="group" aria-label="Theme">
         <button type="button" class="theme-toggle__btn" data-theme-choice="light" id="theme-light">
@@ -23,11 +40,6 @@
           <span>Dark</span>
         </button>
       </div>
-    </section>
-
-    <section class="settings-group settings-group--muted">
-      <h2>{{ icon('users', 18) }} Account</h2>
-      <p class="settings-note">Login, logout, and profile management are planned for a future release.</p>
     </section>
   </section>
 {% endblock %}

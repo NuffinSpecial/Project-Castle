@@ -38,4 +38,5 @@ env/
 Thumbs.db
 
 data/submissions/
+data/castle.db
 web_app/data/

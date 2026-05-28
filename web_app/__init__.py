@@ -2,27 +2,26 @@
 
 from __future__ import annotations
 
-import json
-import uuid
+import os
 from collections.abc import Iterable, Sequence
-from datetime import UTC, datetime
 from pathlib import Path
 
 from asl_translator.pipeline import TranslationPipeline, TranslationResult
 from asl_translator.signs import CommunitySignCatalog
 from flask import Flask, jsonify, render_template, request, send_file
-from werkzeug.utils import secure_filename
+from flask_login import LoginManager, current_user, login_required
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[1]
-_DATA_DIR = _PROJECT_ROOT / "data"
-_SUBMISSIONS_DIR = _DATA_DIR / "submissions"
+from . import db
+from .admin_routes import admin_bp
+from .auth_routes import auth_bp
+from .config import data_dir, secret_key
+from .models import User
+from .submissions import create_submission
+
 _MAX_UPLOAD_BYTES = 25 * 1024 * 1024
-_ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov"}
 
 
 def _sanitize_sentences(raw_sentences: Iterable[str | None]) -> list[str]:
-    """Return a list of trimmed, non-empty sentences."""
-
     sanitized: list[str] = []
     for sentence in raw_sentences:
         if sentence is None:
@@ -36,8 +35,6 @@ def _sanitize_sentences(raw_sentences: Iterable[str | None]) -> list[str]:
 
 
 def _format_results(results: Sequence[TranslationResult]) -> list[dict]:
-    """Serialize :class:`TranslationResult` instances to dictionaries."""
-
     formatted: list[dict] = []
     for result in results:
         formatted.append(
@@ -57,21 +54,50 @@ def _format_results(results: Sequence[TranslationResult]) -> list[dict]:
     return formatted
 
 
-def _allowed_video(filename: str) -> bool:
-    return Path(filename).suffix.lower() in _ALLOWED_VIDEO_EXTENSIONS
+def _bootstrap_admin() -> None:
+    email = os.environ.get("CASTLE_ADMIN_EMAIL", "").strip().lower()
+    password = os.environ.get("CASTLE_ADMIN_PASSWORD", "")
+    username = os.environ.get("CASTLE_ADMIN_USERNAME", "admin")
+    if not email or not password:
+        return
+    if db.get_user_by_email(email) is not None:
+        return
+    db.create_user(email=email, username=username, password=password, is_admin=True)
 
 
 def create_app() -> Flask:
-    """Return a configured Flask application."""
-
+    root = Path(__file__).parent
     app = Flask(
         __name__,
-        template_folder=str(Path(__file__).parent / "templates"),
-        static_folder=str(Path(__file__).parent / "static"),
+        template_folder=str(root / "templates"),
+        static_folder=str(root / "static"),
     )
-    _SUBMISSIONS_DIR.mkdir(parents=True, exist_ok=True)
-    catalog = CommunitySignCatalog(_DATA_DIR)
-    pipeline = TranslationPipeline(catalog=catalog)
+    app.config["SECRET_KEY"] = secret_key()
+    app.config["MAX_CONTENT_LENGTH"] = _MAX_UPLOAD_BYTES
+
+    db.init_db()
+    _bootstrap_admin()
+
+    login_manager = LoginManager()
+    login_manager.login_view = "auth.login_page"
+    login_manager.login_message = "Please sign in to continue."
+
+    @login_manager.user_loader
+    def load_user(user_id: str) -> User | None:
+        row = db.get_user_by_id(int(user_id))
+        return User(row) if row else None
+
+    login_manager.init_app(app)
+
+    catalog = CommunitySignCatalog(data_dir())
+    app.extensions["catalog"] = catalog
+
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(admin_bp)
+
+    @app.context_processor
+    def inject_user():
+        return {"current_user": current_user}
 
     @app.get("/")
     def home() -> str:
@@ -82,6 +108,7 @@ def create_app() -> Flask:
         return render_template("translation.html", active_page="home")
 
     @app.get("/submit")
+    @login_required
     def submit_page() -> str:
         return render_template("submit.html", active_page="submit")
 
@@ -90,11 +117,19 @@ def create_app() -> Flask:
         return render_template("info.html", active_page="info")
 
     @app.get("/settings")
+    @login_required
     def settings_page() -> str:
         return render_template("settings.html", active_page="settings")
 
+    def _pipeline() -> TranslationPipeline:
+        catalog = app.extensions["catalog"]
+        catalog._reload()
+        return TranslationPipeline(catalog=catalog)
+
     @app.get("/api/signs")
     def list_signs():  # type: ignore[override]
+        catalog = app.extensions["catalog"]
+        catalog._reload()
         entries = catalog.list_entries()
         return jsonify(
             {
@@ -111,6 +146,8 @@ def create_app() -> Flask:
 
     @app.get("/api/signs/<gloss>/video")
     def sign_video(gloss: str):  # type: ignore[override]
+        catalog = app.extensions["catalog"]
+        catalog._reload()
         video_path = catalog.video_path(gloss)
         if video_path is None:
             return jsonify({"error": "No community video for this sign yet."}), 404
@@ -132,16 +169,17 @@ def create_app() -> Flask:
 
         try:
             sentences = _sanitize_sentences(raw_sentences)
-        except TypeError as exc:  # pragma: no cover - handled for robustness
+        except TypeError as exc:
             return jsonify({"error": str(exc)}), 400
 
         if not sentences:
             return jsonify({"error": "No sentences provided."}), 400
 
-        results = pipeline.translate_many(sentences)
+        results = _pipeline().translate_many(sentences)
         return jsonify({"sentences": sentences, "results": _format_results(results)})
 
     @app.post("/api/submissions")
+    @login_required
     def submit_translation():  # type: ignore[override]
         english = (request.form.get("english") or "").strip()
         notes = (request.form.get("notes") or "").strip()
@@ -150,57 +188,24 @@ def create_app() -> Flask:
         if not english:
             return jsonify({"error": "English word or phrase is required."}), 400
 
-        submission_id = uuid.uuid4().hex
-        submission_dir = _SUBMISSIONS_DIR / submission_id
-        submission_dir.mkdir(parents=True, exist_ok=True)
-
-        video_file = request.files.get("video")
-        saved_video: str | None = None
-        if video_file and video_file.filename:
-            if not _allowed_video(video_file.filename):
-                return jsonify({"error": "Unsupported video format. Use MP4, WebM, or MOV."}), 400
-
-            video_file.seek(0, 2)
-            size = video_file.tell()
-            video_file.seek(0)
-            if size > _MAX_UPLOAD_BYTES:
-                return jsonify({"error": "Video file exceeds 25 MB limit."}), 400
-
-            filename = secure_filename(video_file.filename)
-            destination = submission_dir / filename
-            video_file.save(destination)
-            saved_video = filename
-
-        metadata = {
-            "id": submission_id,
-            "english": english,
-            "gloss": gloss or english,
-            "notes": notes,
-            "video": saved_video,
-            "submittedAt": datetime.now(UTC).isoformat(),
-        }
-        (submission_dir / "metadata.json").write_text(
-            json.dumps(metadata, indent=2),
-            encoding="utf-8",
-        )
-
-        if saved_video:
-            entry = catalog.register(
+        try:
+            record = create_submission(
                 english=english,
-                gloss=gloss or english,
-                submission_id=submission_id,
-                video=saved_video,
+                gloss=gloss,
+                notes=notes,
+                video_file=request.files.get("video"),
+                user_id=current_user.id,
+                username=current_user.username,
             )
-            video_url = entry.video_api_path
-        else:
-            video_url = None
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
 
         return jsonify(
             {
                 "success": True,
-                "message": "Thank you! Your sign is live in the community catalog.",
-                "id": submission_id,
-                "videoUrl": video_url,
+                "message": "Thank you! Your submission is pending admin review.",
+                "id": record.id,
+                "status": record.status,
             }
         )
 

@@ -1,11 +1,9 @@
 from io import BytesIO
 
-from web_app import create_app
+from tests.conftest import register_and_login
 
 
-def test_home_page_renders():
-    app = create_app()
-    client = app.test_client()
+def test_home_page_renders(client):
 
     response = client.get("/")
 
@@ -14,10 +12,7 @@ def test_home_page_renders():
     assert b"Translate" in response.data
 
 
-def test_translation_page_renders():
-    app = create_app()
-    client = app.test_client()
-
+def test_translation_page_renders(client):
     response = client.get("/translation")
 
     assert response.status_code == 200
@@ -25,40 +20,35 @@ def test_translation_page_renders():
     assert b"Back to Home" in response.data
 
 
-def test_submit_page_renders():
-    app = create_app()
-    client = app.test_client()
+def test_submit_page_redirects_when_logged_out(client):
+    response = client.get("/submit")
+    assert response.status_code == 302
 
+
+def test_submit_page_renders(client):
+    register_and_login(client)
     response = client.get("/submit")
 
     assert response.status_code == 200
     assert b"Submit a Translation" in response.data
 
 
-def test_info_page_renders():
-    app = create_app()
-    client = app.test_client()
-
+def test_info_page_renders(client):
     response = client.get("/info")
 
     assert response.status_code == 200
     assert b"About the Project" in response.data
 
 
-def test_settings_page_renders():
-    app = create_app()
-    client = app.test_client()
-
+def test_settings_page_renders(client):
+    register_and_login(client)
     response = client.get("/settings")
 
     assert response.status_code == 200
     assert b"Display" in response.data
 
 
-def test_translate_endpoint_returns_gloss():
-    app = create_app()
-    client = app.test_client()
-
+def test_translate_endpoint_returns_gloss(client):
     response = client.post("/translate", json={"sentences": ["I will eat an apple tomorrow"]})
     payload = response.get_json()
 
@@ -70,25 +60,20 @@ def test_translate_endpoint_returns_gloss():
     assert "analysisEngine" in payload["results"][0]
 
 
-def test_sign_video_endpoint_404_when_missing():
-    app = create_app()
-    client = app.test_client()
-
+def test_sign_video_endpoint_404_when_missing(client):
     response = client.get("/api/signs/NOTASIGN/video")
 
     assert response.status_code == 404
 
 
-def test_submission_endpoint_accepts_form():
-    app = create_app()
-    client = app.test_client()
-
+def test_submission_endpoint_accepts_form(client):
+    register_and_login(client)
     response = client.post(
         "/api/submissions",
         data={
             "english": "hello",
             "notes": "test note",
-            "video": (BytesIO(b"fake"), "sign.webm"),
+            "video": (BytesIO(b"fake-video"), "sign.webm"),
         },
         content_type="multipart/form-data",
     )
@@ -96,14 +81,12 @@ def test_submission_endpoint_accepts_form():
 
     assert response.status_code == 200
     assert payload["success"] is True
-    assert "catalog" in payload["message"].lower()
-    assert payload.get("videoUrl")
+    assert payload["status"] == "pending"
+    assert "review" in payload["message"].lower()
 
 
-def test_submission_rejects_missing_english():
-    app = create_app()
-    client = app.test_client()
-
+def test_submission_rejects_missing_english(client):
+    register_and_login(client)
     response = client.post("/api/submissions", data={"english": "  "})
 
     assert response.status_code == 400
