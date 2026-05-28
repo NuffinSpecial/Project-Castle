@@ -85,9 +85,7 @@ def get_user_by_email(email: str, db_path: Path | None = None) -> sqlite3.Row | 
 
 def get_user_by_username(username: str, db_path: Path | None = None) -> sqlite3.Row | None:
     with get_db(db_path) as connection:
-        return connection.execute(
-            "SELECT * FROM users WHERE username = ?", (username,)
-        ).fetchone()
+        return connection.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
 
 
 def verify_user(email: str, password: str, db_path: Path | None = None) -> sqlite3.Row | None:

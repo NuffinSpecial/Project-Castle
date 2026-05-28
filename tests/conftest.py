@@ -57,4 +57,3 @@ def register_and_login(
         },
         follow_redirects=True,
     )
-
