@@ -1,0 +1,20 @@
+<nav class="admin-subnav" aria-label="Admin sections">
+  <a
+    class="admin-subnav__link{% if admin_section == 'review' %} admin-subnav__link--active{% endif %}"
+    href="{{ url_for('admin.admin_dashboard') }}"
+  >
+    Pending review
+    {% if counts is defined and counts.pending is defined %}
+      <span class="admin-subnav__count">{{ counts.pending }}</span>
+    {% endif %}
+  </a>
+  <a
+    class="admin-subnav__link{% if admin_section == 'signs' %} admin-subnav__link--active{% endif %}"
+    href="{{ url_for('admin.admin_signs') }}"
+  >
+    All signs
+    {% if counts is defined and counts.all is defined %}
+      <span class="admin-subnav__count">{{ counts.all }}</span>
+    {% endif %}
+  </a>
+</nav>

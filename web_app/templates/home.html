@@ -15,7 +15,7 @@
   </section>
 
   <section class="examples-section" aria-label="Example phrases">
-    <h2 class="examples-section__title">{{ icon('sparkle', 18) }} Try an example</h2>
+    <h2 class="examples-section__title">Try an example</h2>
     <div class="phrase-chips" id="example-phrases">
       <button type="button" class="phrase-chip" data-phrase="I will eat an apple tomorrow">
         I will eat an apple tomorrow
@@ -31,7 +31,9 @@
 
   <section class="brand-section">
     <div class="brand-card">
-      <div class="brand-card__logo" aria-hidden="true">{{ icon('castle', 72, 'icon--brand') }}</div>
+      <div class="brand-card__logo" aria-hidden="true">
+        <img src="{{ url_for('static', filename='logo.svg') }}" alt="" width="80" height="80" />
+      </div>
       <h1 class="brand-card__title">Contextual ASL Translator</h1>
       <p class="brand-card__tagline">
         Type English, get ASL gloss tokens, and explore each sign with references and playback.
@@ -41,17 +43,17 @@
 
   <section class="features-grid" aria-label="How it works">
     <article class="feature-card">
-      <span class="feature-card__icon">{{ icon('languages', 28) }}</span>
+      <span class="feature-card__icon">{{ icon('languages', 32) }}</span>
       <h3>1. Enter English</h3>
       <p>Type or pick a phrase. Recent searches are saved locally for quick access.</p>
     </article>
     <article class="feature-card">
-      <span class="feature-card__icon">{{ icon('book', 28) }}</span>
+      <span class="feature-card__icon">{{ icon('book', 32) }}</span>
       <h3>2. Read the gloss</h3>
       <p>See how the sentence maps to ASL gloss order—each token is tappable.</p>
     </article>
     <article class="feature-card">
-      <span class="feature-card__icon">{{ icon('video', 28) }}</span>
+      <span class="feature-card__icon">{{ icon('video', 32) }}</span>
       <h3>3. Explore signs</h3>
       <p>Select a gloss word to play a community-submitted sign video when available.</p>
     </article>
@@ -60,14 +62,14 @@
   <section class="home-aside">
     <div class="stat-strip">
       <div class="stat-strip__item">
-        {{ icon('clock', 20) }}
+        {{ icon('clock', 22) }}
         <div>
           <strong>Recent searches</strong>
           <span>Stored on this device</span>
         </div>
       </div>
       <div class="stat-strip__item">
-        {{ icon('users', 20) }}
+        {{ icon('users', 22) }}
         <div>
           <strong>Community signs</strong>
           <span><a href="{{ url_for('submit_page') }}">Submit a video</a> to grow the library</span>

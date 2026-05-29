@@ -191,4 +191,37 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  const helpToggle = document.getElementById("help-toggle");
+  const helpPanel = document.getElementById("help-panel");
+  const helpClose = document.getElementById("help-close");
+
+  function setHelpOpen(open) {
+    if (!helpPanel || !helpToggle) return;
+    helpPanel.hidden = !open;
+    helpToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    helpToggle.classList.toggle("help-toggle--active", open);
+  }
+
+  helpToggle?.addEventListener("click", () => {
+    setHelpOpen(helpPanel.hidden);
+  });
+
+  helpClose?.addEventListener("click", () => {
+    setHelpOpen(false);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && helpPanel && !helpPanel.hidden) {
+      setHelpOpen(false);
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!helpPanel || helpPanel.hidden) return;
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (helpPanel.contains(target) || helpToggle?.contains(target)) return;
+    setHelpOpen(false);
+  });
 });

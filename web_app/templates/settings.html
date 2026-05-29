@@ -23,7 +23,9 @@
       </form>
       {% if current_user.is_admin %}
         <p class="settings-note">
-          <a href="{{ url_for('admin.admin_dashboard') }}">Open admin submission review →</a>
+          <a href="{{ url_for('admin.admin_dashboard') }}">Pending review</a>
+          ·
+          <a href="{{ url_for('admin.admin_signs') }}">Manage all signs →</a>
         </p>
       {% endif %}
     </section>

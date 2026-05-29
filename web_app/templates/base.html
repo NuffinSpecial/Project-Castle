@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <title>{% block title %}Project Castle{% endblock %} | ASL Translator</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
     <script>
       (function () {
         try {
@@ -50,7 +57,15 @@
 
     <header class="site-header">
       <a class="site-header__logo" href="{{ url_for('home') }}" aria-label="Project Castle home">
-        <span class="site-header__logo-mark">{{ icon('castle', 22, 'icon--logo') }}</span>
+        <span class="site-header__logo-mark">
+          <img
+            src="{{ url_for('static', filename='favicon.svg') }}"
+            alt=""
+            width="28"
+            height="28"
+            class="site-header__favicon"
+          />
+        </span>
         <span>Project Castle</span>
       </a>
 
@@ -81,7 +96,7 @@
             class="site-header__link{% if active_page == 'admin' %} site-header__link--active{% endif %}"
             href="{{ url_for('admin.admin_dashboard') }}"
           >
-            {{ icon('settings', 18, 'icon--nav') }}
+            {{ icon('shield', 18, 'icon--nav') }}
             <span>Admin</span>
           </a>
         {% endif %}
@@ -110,7 +125,13 @@
     <footer class="site-footer">
       <div class="site-footer__inner">
         <p class="site-footer__brand">
-          {{ icon('castle', 18) }}
+          <img
+            src="{{ url_for('static', filename='favicon.svg') }}"
+            alt=""
+            width="20"
+            height="20"
+            class="site-footer__favicon"
+          />
           <span>Project Castle · Contextual ASL Translator</span>
         </p>
         <nav class="site-footer__nav" aria-label="Footer">

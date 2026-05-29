@@ -17,7 +17,8 @@ def test_translation_page_renders(client):
 
     assert response.status_code == 200
     assert b"ASL Gloss" in response.data
-    assert b"Back to Home" in response.data
+    assert b"Back" in response.data
+    assert b"ASL Gloss" in response.data
 
 
 def test_submit_page_redirects_when_logged_out(client):

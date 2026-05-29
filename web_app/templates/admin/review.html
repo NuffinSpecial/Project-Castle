@@ -9,9 +9,11 @@
 
 {% block content %}
   <section class="admin-header">
-    <h1>{{ icon('settings', 28) }} Submission review</h1>
+    <h1>{{ icon('clipboard-check', 28) }} Submission review</h1>
     <p class="admin-header__intro">Approve or reject pending community sign submissions.</p>
   </section>
+
+  {% include "admin/_subnav.html" %}
 
   <section class="admin-panel">
     <h2>Pending ({{ pending|length }})</h2>
@@ -34,11 +36,21 @@
               {% endif %}
             </dl>
             {% if item.video %}
-              <video class="admin-card__video" controls preload="metadata" src="{{ url_for('admin.preview_video', submission_id=item.id) }}"></video>
+              <video
+                class="admin-card__video"
+                controls
+                preload="metadata"
+                src="{{ url_for('admin.preview_video', submission_id=item.id) }}"
+              ></video>
             {% endif %}
             <div class="admin-card__actions">
-              <button type="button" class="btn btn--primary admin-approve" data-id="{{ item.id }}">Approve</button>
-              <button type="button" class="btn btn--danger admin-reject" data-id="{{ item.id }}">Reject</button>
+              <button type="button" class="btn btn--primary admin-approve" data-id="{{ item.id }}">
+                Approve
+              </button>
+              <button type="button" class="btn btn--danger admin-reject" data-id="{{ item.id }}">
+                Reject
+              </button>
+              <a class="btn btn--secondary" href="{{ url_for('admin.admin_signs') }}">Manage all</a>
             </div>
             <label class="field admin-reject-note" hidden>
               <span class="field__label">Rejection note (optional)</span>
@@ -48,20 +60,7 @@
         {% endfor %}
       </div>
     {% else %}
-      <p class="admin-empty">No pending submissions.</p>
-    {% endif %}
-  </section>
-
-  <section class="admin-panel admin-panel--muted">
-    <h2>Recently approved</h2>
-    {% if recent %}
-      <ul class="admin-summary">
-        {% for item in recent %}
-          <li><strong>{{ item.gloss }}</strong> — {{ item.english }}</li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="admin-empty">None yet.</p>
+      <p class="admin-empty">No pending submissions. <a href="{{ url_for('admin.admin_signs') }}">Browse all signs</a>.</p>
     {% endif %}
   </section>
 {% endblock %}
