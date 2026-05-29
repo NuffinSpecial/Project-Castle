@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% from '_macros.html' import icon %}
+
+{% set active_page = "admin" %}
+
+{% block title %}User reports{% endblock %}
+
+{% block main_class %} site-main--wide{% endblock %}
+
+{% block content %}
+  <section class="admin-header">
+    <h1>{{ icon('flag', 28) }} User reports</h1>
+    <p class="admin-header__intro">Review reports of incorrect glossing or sign videos.</p>
+  </section>
+
+  {% include "admin/_subnav.html" %}
+
+  <nav class="admin-filters" aria-label="Report status">
+    {% for value, label in [
+      ('open', 'Open'),
+      ('resolved', 'Resolved'),
+      ('dismissed', 'Dismissed'),
+      ('all', 'All'),
+    ] %}
+      <a
+        class="admin-filter{% if status_filter == value %} admin-filter--active{% endif %}"
+        href="{{ url_for('admin.admin_reports', status=value) }}"
+      >{{ label }}</a>
+    {% endfor %}
+  </nav>
+
+  <section class="admin-panel">
+    <h2>{{ status_filter|capitalize }} ({{ reports|length }})</h2>
+    {% if reports %}
+      <div class="admin-list">
+        {% for item in reports %}
+          <article class="admin-card admin-card--report" data-report-id="{{ item.id }}">
+            <header class="admin-card__header">
+              <h3>
+                {% if item.report_type == 'video' %}
+                  Video: {{ item.gloss_token or '—' }}
+                {% else %}
+                  Gloss translation
+                {% endif %}
+              </h3>
+              <span class="admin-card__badge admin-card__badge--{{ item.status }}">{{ item.status }}</span>
+            </header>
+            <dl class="admin-card__meta">
+              <div><dt>Sentence</dt><dd>{{ item.original_sentence }}</dd></div>
+              {% if item.gloss_tokens %}
+                <div><dt>Gloss</dt><dd>{{ item.gloss_tokens | join(' ') }}</dd></div>
+              {% endif %}
+              {% if item.gloss_token and item.report_type == 'video' %}
+                <div><dt>Sign</dt><dd>{{ item.gloss_token }}</dd></div>
+              {% endif %}
+              {% if item.submission_id %}
+                <div><dt>Submission</dt><dd><code>{{ item.submission_id }}</code></dd></div>
+              {% endif %}
+              <div><dt>Reporter</dt><dd>{{ item.reporter_username or '—' }}</dd></div>
+              <div><dt>Reported</dt><dd>{{ item.created_at }}</dd></div>
+              <div><dt>Message</dt><dd>{{ item.message }}</dd></div>
+              {% if item.admin_note %}
+                <div><dt>Admin note</dt><dd>{{ item.admin_note }}</dd></div>
+              {% endif %}
+            </dl>
+            {% if item.status == 'open' %}
+              <label class="field admin-report-note">
+                <span class="field__label">Admin note (optional)</span>
+                <input type="text" class="report-note-input" placeholder="Internal note" />
+              </label>
+              <div class="admin-card__actions">
+                <button type="button" class="btn btn--primary admin-report-resolve" data-id="{{ item.id }}">
+                  Resolve
+                </button>
+                <button type="button" class="btn btn--secondary admin-report-dismiss" data-id="{{ item.id }}">
+                  Dismiss
+                </button>
+                {% if item.submission_id %}
+                  <a class="btn btn--secondary" href="{{ url_for('admin.admin_signs') }}">Manage signs</a>
+                {% endif %}
+              </div>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="admin-empty">No {{ status_filter }} reports.</p>
+    {% endif %}
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='admin-reports.js') }}" defer></script>
+{% endblock %}

@@ -46,7 +46,8 @@ def test_settings_page_renders(client):
     response = client.get("/settings")
 
     assert response.status_code == 200
-    assert b"Display" in response.data
+    assert b"Account" in response.data
+    assert b"<h2>Display</h2>" not in response.data
 
 
 def test_translate_endpoint_returns_gloss(client):

@@ -30,11 +30,22 @@
     </button>
   </header>
 
-  <div class="translation-workspace">
+  <div
+    class="translation-workspace"
+    id="translation-workspace"
+    data-logged-in="{{ 'true' if current_user.is_authenticated else 'false' }}"
+    data-login-url="{{ url_for('auth.login_page', next=request.full_path) }}"
+  >
     <div class="translation-workspace__main">
       <section class="translation-output" aria-live="polite">
         <header class="translation-output__head">
-          <h2 class="translation-output__label">{{ icon('book', 18) }} ASL Gloss</h2>
+          <div class="translation-output__title-row">
+            <h2 class="translation-output__label">{{ icon('book', 18) }} ASL Gloss</h2>
+            <button type="button" class="report-btn" id="report-gloss-btn" hidden>
+              {{ icon('flag', 16) }}
+              <span>Report gloss</span>
+            </button>
+          </div>
           <p class="translation-output__sentence" id="original-sentence"></p>
         </header>
         <div class="gloss-tokens" id="gloss-tokens" role="group" aria-label="Gloss words"></div>
@@ -56,18 +67,25 @@
                 <span>Submit this sign</span>
               </a>
             </div>
-          </div>
-          <div class="video-player__footer">
-            <p class="video-player__sign" id="video-sign-label">Select a gloss word</p>
-            <div class="video-player__controls">
+            <button
+              type="button"
+              class="report-btn report-btn--overlay"
+              id="report-video-btn"
+              hidden
+              aria-label="Report video"
+              title="Report video"
+            >
+              {{ icon('flag', 14) }}
+            </button>
+            <div class="video-player__controls video-player__controls--overlay">
               <button type="button" class="control-btn control-btn--icon" id="video-play" aria-label="Play">
-                {{ icon('play', 18) }}
+                {{ icon('play', 16) }}
               </button>
               <button type="button" class="control-btn control-btn--icon" id="video-pause" aria-label="Pause">
-                {{ icon('pause', 18) }}
+                {{ icon('pause', 16) }}
               </button>
               <button type="button" class="control-btn control-btn--icon" id="video-replay" aria-label="Replay">
-                {{ icon('replay', 18) }}
+                {{ icon('replay', 16) }}
               </button>
               <label class="control-speed">
                 <span class="visually-hidden">Speed</span>
@@ -80,6 +98,31 @@
                 </select>
               </label>
             </div>
+          </div>
+          <div class="video-player__footer">
+            <p class="video-player__sign" id="video-sign-label">Select a gloss word</p>
+            <p class="video-player__context" id="video-sign-context" hidden></p>
+          </div>
+          <div class="sign-variant-controls sign-variant-controls--footer" id="sign-variant-controls" hidden>
+            <button
+              type="button"
+              class="sign-variant-controls__btn"
+              id="sign-variant-prev"
+              aria-label="Previous sign variant"
+            >
+              {{ icon('arrow-left', 16) }}
+              <span>Previous</span>
+            </button>
+            <span class="sign-variant-controls__label" id="sign-variant-label" aria-live="polite"></span>
+            <button
+              type="button"
+              class="sign-variant-controls__btn"
+              id="sign-variant-next"
+              aria-label="Next sign variant"
+            >
+              <span>Next</span>
+              {{ icon('arrow-right', 16) }}
+            </button>
           </div>
         </div>
       </section>
@@ -105,10 +148,39 @@
         <li>Tokens with a dot have a community video.</li>
         <li>↔ Groups can be signed in either order.</li>
         <li>Click a gloss word to play it in the player.</li>
+        <li>Multiple community videos for one gloss? Use <strong>Previous</strong> / <strong>Next</strong> to cycle variants.</li>
+        <li>Context under the player describes what each submitted sign means.</li>
         <li>Missing a sign? Submit one from the link under the player.</li>
+        <li>Something wrong? Use <strong>Report gloss</strong> or <strong>Report video</strong> (sign in required).</li>
       </ul>
     </aside>
   </div>
+
+  <dialog id="report-dialog" class="report-dialog" aria-labelledby="report-dialog-title">
+    <form method="dialog" class="report-dialog__form" id="report-form">
+      <header class="report-dialog__header">
+        <h2 id="report-dialog-title">Report an issue</h2>
+        <button type="button" class="report-dialog__close" id="report-dialog-close" aria-label="Close">×</button>
+      </header>
+      <p class="report-dialog__intro" id="report-dialog-intro"></p>
+      <label class="field">
+        <span class="field__label">What is wrong?</span>
+        <textarea
+          id="report-message"
+          name="message"
+          rows="4"
+          required
+          minlength="5"
+          placeholder="Describe the incorrect gloss or video…"
+        ></textarea>
+      </label>
+      <p id="report-error" class="phrase-error" role="alert" hidden></p>
+      <footer class="report-dialog__actions">
+        <button type="button" class="btn btn--secondary" id="report-cancel">Cancel</button>
+        <button type="submit" class="btn btn--primary" id="report-submit">Submit report</button>
+      </footer>
+    </form>
+  </dialog>
 {% endblock %}
 
 {% block scripts %}

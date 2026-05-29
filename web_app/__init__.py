@@ -34,9 +34,44 @@ def _sanitize_sentences(raw_sentences: Iterable[str | None]) -> list[str]:
     return sanitized
 
 
-def _format_results(results: Sequence[TranslationResult]) -> list[dict]:
+def _variant_payload(entry) -> dict:
+    context = entry.notes.strip() or entry.english
+    return {
+        "submissionId": entry.submission_id,
+        "videoUrl": entry.video_api_path,
+        "english": entry.english,
+        "context": context,
+    }
+
+
+def _format_results(
+    results: Sequence[TranslationResult],
+    catalog: CommunitySignCatalog,
+) -> list[dict]:
     formatted: list[dict] = []
     for result in results:
+        sign_variants: list[list[dict]] = []
+        submission_ids: list[str | None] = []
+        links: list[str | None] = []
+        sign_available: list[bool] = []
+
+        for token in result.gloss_tokens:
+            entries = catalog.lookup_all(token)
+            variants = [
+                _variant_payload(entry)
+                for entry in entries
+                if catalog.video_path_for_entry(entry) is not None
+            ]
+            sign_variants.append(variants)
+            if variants:
+                links.append(variants[0]["videoUrl"])
+                submission_ids.append(variants[0]["submissionId"])
+                sign_available.append(True)
+            else:
+                links.append(None)
+                submission_ids.append(None)
+                sign_available.append(False)
+
         formatted.append(
             {
                 "originalSentence": result.original_sentence,
@@ -45,8 +80,10 @@ def _format_results(results: Sequence[TranslationResult]) -> list[dict]:
                 "lemmas": result.lemmas,
                 "posTags": result.pos_tags,
                 "glossTokens": result.gloss_tokens,
-                "links": result.links,
-                "signAvailable": result.sign_available,
+                "links": links,
+                "submissionIds": submission_ids,
+                "signVariants": sign_variants,
+                "signAvailable": sign_available,
                 "analysisEngine": result.analysis_engine,
                 "mutableGroups": result.mutable_groups,
             }
@@ -148,7 +185,8 @@ def create_app() -> Flask:
     def sign_video(gloss: str):  # type: ignore[override]
         catalog = app.extensions["catalog"]
         catalog._reload()
-        video_path = catalog.video_path(gloss)
+        submission_id = (request.args.get("submission") or "").strip() or None
+        video_path = catalog.video_path(gloss, submission_id=submission_id)
         if video_path is None:
             return jsonify({"error": "No community video for this sign yet."}), 404
         return send_file(video_path, conditional=True)
@@ -175,8 +213,48 @@ def create_app() -> Flask:
         if not sentences:
             return jsonify({"error": "No sentences provided."}), 400
 
-        results = _pipeline().translate_many(sentences)
-        return jsonify({"sentences": sentences, "results": _format_results(results)})
+        pipeline = _pipeline()
+        results = pipeline.translate_many(sentences)
+        catalog = app.extensions["catalog"]
+        return jsonify({"sentences": sentences, "results": _format_results(results, catalog)})
+
+    @app.post("/api/reports")
+    @login_required
+    def create_report():  # type: ignore[override]
+        from .reports import create_report as save_report
+
+        payload = request.get_json(silent=True) or {}
+        report_type = str(payload.get("type", "")).strip().lower()
+        original_sentence = str(payload.get("originalSentence", "")).strip()
+        message = str(payload.get("message", "")).strip()
+        gloss_tokens = payload.get("glossTokens")
+        gloss_token = str(payload.get("glossToken", "")).strip() or None
+        submission_id = str(payload.get("submissionId", "")).strip() or None
+
+        if not isinstance(gloss_tokens, list):
+            gloss_tokens = []
+
+        try:
+            record = save_report(
+                report_type=report_type,
+                original_sentence=original_sentence,
+                message=message,
+                gloss_tokens=[str(token) for token in gloss_tokens],
+                gloss_token=gloss_token,
+                submission_id=submission_id,
+                reporter_id=current_user.id,
+                reporter_username=current_user.username,
+            )
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+
+        return jsonify(
+            {
+                "success": True,
+                "message": "Thank you — your report was submitted.",
+                "id": record.id,
+            }
+        )
 
     @app.post("/api/submissions")
     @login_required
