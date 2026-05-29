@@ -15,7 +15,9 @@
 
     <div class="info-page__body">
       <div class="info-page__hero">
-        <span class="info-page__logo">{{ icon('castle', 64, 'icon--brand') }}</span>
+        <span class="info-page__logo">
+          <img src="{{ url_for('static', filename='logo.svg') }}" alt="" width="72" height="72" />
+        </span>
       </div>
 
       <div class="info-page__text">
@@ -32,7 +34,7 @@
         <p>
           Built by <strong>NuffinSpecial</strong>. Every sign you submit on the
           <a href="{{ url_for('submit_page') }}">Submit Translation</a> page is added to the live
-          catalog immediately.
+          catalog after admin review.
         </p>
       </div>
 

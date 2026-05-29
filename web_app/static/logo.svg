@@ -1,9 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-  <rect width="64" height="64" rx="14" fill="currentColor" opacity="0.12"/>
-  <g stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M14 48V24l10-6 10 6v24"/>
-    <path d="M24 48V30l10-6 10 6v18"/>
-    <path d="M20 36h2M30 36h2M40 36h2"/>
-    <path d="M18 48c2 2 4 3 6 3s4-1 6-3"/>
+  <defs>
+    <linearGradient id="logoBg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#logoBg)"/>
+  <g fill="#ffffff">
+    <rect x="12" y="40" width="40" height="6" rx="1"/>
+    <rect x="16" y="24" width="8" height="16"/>
+    <rect x="28" y="16" width="8" height="24"/>
+    <rect x="40" y="24" width="8" height="16"/>
+    <rect x="14" y="20" width="4" height="4"/>
+    <rect x="20" y="20" width="4" height="4"/>
+    <rect x="26" y="12" width="4" height="4"/>
+    <rect x="32" y="12" width="4" height="4"/>
+    <rect x="38" y="20" width="4" height="4"/>
+    <rect x="44" y="20" width="4" height="4"/>
   </g>
 </svg>

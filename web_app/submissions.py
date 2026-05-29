@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -188,3 +189,71 @@ def update_submission_status(
     meta["reviewNote"] = review_note.strip()
     _write_metadata(folder, meta)
     return _record_from_meta(meta)
+
+
+def update_submission_metadata(
+    submission_id: str,
+    *,
+    english: str | None = None,
+    gloss: str | None = None,
+    notes: str | None = None,
+) -> SubmissionRecord | None:
+    folder = submissions_root() / submission_id
+    meta = _read_metadata(folder)
+    if meta is None:
+        return None
+
+    if english is not None:
+        meta["english"] = english.strip()
+    if gloss is not None:
+        cleaned = gloss.strip()
+        meta["gloss"] = cleaned or meta.get("english", "")
+    if notes is not None:
+        meta["notes"] = notes.strip()
+
+    _write_metadata(folder, meta)
+    return _record_from_meta(meta)
+
+
+def _save_video_file(folder: Path, video_file) -> str:
+    from werkzeug.utils import secure_filename
+
+    original_name = video_file.filename or "upload.webm"
+    if not allowed_video(original_name):
+        raise ValueError("Unsupported video format. Use MP4, WebM, or MOV.")
+
+    video_file.seek(0, 2)
+    size = video_file.tell()
+    video_file.seek(0)
+    if size > _MAX_UPLOAD_BYTES:
+        raise ValueError("Video file exceeds 25 MB limit.")
+
+    for path in folder.iterdir():
+        if path.is_file() and path.name != "metadata.json":
+            path.unlink()
+
+    saved_video = secure_filename(original_name) or "upload.webm"
+    video_file.save(folder / saved_video)
+    return saved_video
+
+
+def replace_submission_video(submission_id: str, video_file) -> SubmissionRecord | None:
+    folder = submissions_root() / submission_id
+    meta = _read_metadata(folder)
+    if meta is None:
+        return None
+    if not video_file or not getattr(video_file, "filename", None):
+        raise ValueError("A video file is required.")
+
+    saved_video = _save_video_file(folder, video_file)
+    meta["video"] = saved_video
+    _write_metadata(folder, meta)
+    return _record_from_meta(meta)
+
+
+def delete_submission(submission_id: str) -> bool:
+    folder = submissions_root() / submission_id
+    if not folder.is_dir():
+        return False
+    shutil.rmtree(folder)
+    return True

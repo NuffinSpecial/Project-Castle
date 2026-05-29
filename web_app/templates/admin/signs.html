@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% from '_macros.html' import icon %}
+
+{% set active_page = "admin" %}
+
+{% block title %}Manage signs{% endblock %}
+
+{% block main_class %} site-main--wide{% endblock %}
+
+{% block content %}
+  <section class="admin-header">
+    <h1>{{ icon('video', 28) }} Manage signs</h1>
+    <p class="admin-header__intro">
+      View every submission, edit metadata, replace videos, revoke approval, or delete entries.
+    </p>
+  </section>
+
+  {% set counts = counts %}
+  {% include "admin/_subnav.html" %}
+
+  <div class="admin-filters" role="tablist" aria-label="Filter by status">
+    <a
+      class="admin-filter{% if admin_view == 'all' %} admin-filter--active{% endif %}"
+      href="{{ url_for('admin.admin_signs', status='all') }}"
+    >All ({{ counts.all }})</a>
+    <a
+      class="admin-filter{% if admin_view == 'pending' %} admin-filter--active{% endif %}"
+      href="{{ url_for('admin.admin_signs', status='pending') }}"
+    >Pending ({{ counts.pending }})</a>
+    <a
+      class="admin-filter{% if admin_view == 'approved' %} admin-filter--active{% endif %}"
+      href="{{ url_for('admin.admin_signs', status='approved') }}"
+    >Approved ({{ counts.approved }})</a>
+    <a
+      class="admin-filter{% if admin_view == 'rejected' %} admin-filter--active{% endif %}"
+      href="{{ url_for('admin.admin_signs', status='rejected') }}"
+    >Rejected ({{ counts.rejected }})</a>
+  </div>
+
+  <section class="admin-panel">
+    {% if submissions %}
+      <div class="admin-list">
+        {% for item in submissions %}
+          <article class="admin-card admin-card--manage" data-submission-id="{{ item.id }}">
+            <header class="admin-card__header">
+              <h3>{{ item.gloss }}</h3>
+              <span class="admin-card__badge admin-card__badge--{{ item.status }}">{{ item.status }}</span>
+            </header>
+
+            <dl class="admin-card__meta">
+              <div><dt>ID</dt><dd><code class="admin-code">{{ item.id[:8] }}…</code></dd></div>
+              <div><dt>English</dt><dd>{{ item.english }}</dd></div>
+              <div><dt>Submitted</dt><dd>{{ item.submitted_at }}</dd></div>
+              {% if item.submitted_by_username %}
+                <div><dt>By</dt><dd>{{ item.submitted_by_username }}</dd></div>
+              {% endif %}
+              {% if item.reviewed_at %}
+                <div><dt>Reviewed</dt><dd>{{ item.reviewed_at }}</dd></div>
+              {% endif %}
+              {% if item.review_note %}
+                <div><dt>Review note</dt><dd>{{ item.review_note }}</dd></div>
+              {% endif %}
+            </dl>
+
+            {% if item.video %}
+              <video
+                class="admin-card__video"
+                controls
+                preload="metadata"
+                src="{{ url_for('admin.preview_video', submission_id=item.id) }}"
+              ></video>
+            {% else %}
+              <p class="admin-empty">No video file.</p>
+            {% endif %}
+
+            <details class="admin-details">
+              <summary>Edit details</summary>
+              <form
+                class="admin-form"
+                method="post"
+                action="{{ url_for('admin.update_submission', submission_id=item.id) }}"
+              >
+                <label class="field">
+                  <span class="field__label">English</span>
+                  <input type="text" name="english" value="{{ item.english }}" required maxlength="200" />
+                </label>
+                <label class="field">
+                  <span class="field__label">Gloss</span>
+                  <input type="text" name="gloss" value="{{ item.gloss }}" maxlength="200" />
+                </label>
+                <label class="field">
+                  <span class="field__label">Notes</span>
+                  <textarea name="notes" rows="2" maxlength="1000">{{ item.notes }}</textarea>
+                </label>
+                <button type="submit" class="btn btn--secondary">Save changes</button>
+              </form>
+            </details>
+
+            <details class="admin-details">
+              <summary>Replace video</summary>
+              <form
+                class="admin-form"
+                method="post"
+                action="{{ url_for('admin.replace_video', submission_id=item.id) }}"
+                enctype="multipart/form-data"
+              >
+                <label class="field">
+                  <span class="field__label">New video (MP4, WebM, MOV)</span>
+                  <input
+                    type="file"
+                    name="video"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    required
+                  />
+                </label>
+                <button type="submit" class="btn btn--secondary">Upload replacement</button>
+              </form>
+            </details>
+
+            <div class="admin-card__actions">
+              {% if item.status == 'pending' %}
+                <form method="post" action="{{ url_for('admin.approve_submission', submission_id=item.id) }}">
+                  <input type="hidden" name="_from" value="signs" />
+                  <button type="submit" class="btn btn--primary">Approve</button>
+                </form>
+                <form method="post" action="{{ url_for('admin.reject_submission', submission_id=item.id) }}">
+                  <input type="hidden" name="_from" value="signs" />
+                  <input type="hidden" name="review_note" value="" />
+                  <button type="submit" class="btn btn--danger">Reject</button>
+                </form>
+              {% elif item.status == 'approved' %}
+                <form method="post" action="{{ url_for('admin.revoke_submission', submission_id=item.id) }}">
+                  <button type="submit" class="btn btn--secondary">Revoke approval</button>
+                </form>
+              {% elif item.status == 'rejected' %}
+                <form method="post" action="{{ url_for('admin.approve_submission', submission_id=item.id) }}">
+                  <input type="hidden" name="_from" value="signs" />
+                  <button type="submit" class="btn btn--primary">Approve</button>
+                </form>
+              {% endif %}
+
+              <form
+                method="post"
+                action="{{ url_for('admin.delete_submission_route', submission_id=item.id) }}"
+                class="admin-delete-form"
+                data-gloss="{{ item.gloss }}"
+              >
+                <button type="submit" class="btn btn--danger">Delete permanently</button>
+              </form>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="admin-empty">No submissions in this view.</p>
+    {% endif %}
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='admin-signs.js') }}" defer></script>
+{% endblock %}

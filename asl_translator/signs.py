@@ -166,6 +166,23 @@ class CommunitySignCatalog:
             result.append(entry)
         return sorted(result, key=lambda item: item.gloss)
 
+    def remove_by_submission_id(self, submission_id: str) -> bool:
+        """Remove all catalog entries for a submission."""
+        keys = [
+            key for key, entry in self._by_gloss.items() if entry.submission_id == submission_id
+        ]
+        for key in keys:
+            del self._by_gloss[key]
+        if keys:
+            self._save_catalog()
+        return bool(keys)
+
+    def entry_for_submission(self, submission_id: str) -> SignEntry | None:
+        for entry in self._by_gloss.values():
+            if entry.submission_id == submission_id:
+                return entry
+        return None
+
 
 class CommunitySignLinker:
     """Resolve gloss tokens to community sign video API paths."""
