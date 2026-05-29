@@ -17,4 +17,13 @@
       <span class="admin-subnav__count">{{ counts.all }}</span>
     {% endif %}
   </a>
+  <a
+    class="admin-subnav__link{% if admin_section == 'reports' %} admin-subnav__link--active{% endif %}"
+    href="{{ url_for('admin.admin_reports') }}"
+  >
+    Reports
+    {% if counts is defined and counts.reports_open is defined and counts.reports_open > 0 %}
+      <span class="admin-subnav__count">{{ counts.reports_open }}</span>
+    {% endif %}
+  </a>
 </nav>

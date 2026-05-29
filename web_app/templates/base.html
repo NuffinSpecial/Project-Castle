@@ -40,6 +40,7 @@
       }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='animations.css') }}" />
     {% block head %}{% endblock %}
   </head>
   <body>
@@ -103,18 +104,64 @@
       </nav>
 
       <div class="site-header__account">
-        {% if current_user.is_authenticated %}
-          <span class="site-header__user">{{ current_user.username }}</span>
-          <form method="post" action="{{ url_for('auth.logout_submit') }}" class="site-header__logout-form">
-            <button type="submit" class="site-header__text-btn">Sign out</button>
-          </form>
-        {% else %}
-          <a class="site-header__text-btn" href="{{ url_for('auth.login_page') }}">Sign in</a>
-          <a class="site-header__text-btn site-header__text-btn--primary" href="{{ url_for('auth.register_page') }}">Register</a>
-        {% endif %}
-        <a class="site-header__settings" href="{{ url_for('settings_page') }}" aria-label="Settings">
-          {{ icon('settings', 22) }}
-        </a>
+        <div class="user-menu" data-user-menu>
+          <button
+            type="button"
+            class="user-menu__trigger"
+            id="user-menu-trigger"
+            aria-expanded="false"
+            aria-controls="user-menu-panel"
+            aria-haspopup="true"
+          >
+            {{ icon('user', 20) }}
+            {% if current_user.is_authenticated %}
+              <span class="user-menu__name">{{ current_user.username }}</span>
+            {% endif %}
+          </button>
+          <div class="user-menu__panel" id="user-menu-panel" hidden>
+            {% if current_user.is_authenticated %}
+              <p class="user-menu__heading">{{ current_user.username }}</p>
+            {% endif %}
+            <a class="user-menu__item" href="{{ url_for('settings_page') }}">
+              {{ icon('settings', 18) }}
+              <span>Settings</span>
+            </a>
+            <div class="user-menu__theme-row">
+              <span class="user-menu__theme-label">Display</span>
+              <button
+                type="button"
+                class="theme-slider"
+                id="header-theme-toggle"
+                role="switch"
+                aria-checked="false"
+                aria-label="Light mode"
+                title="Toggle light or dark mode"
+              >
+                <span class="theme-slider__track">
+                  <span class="theme-slider__thumb" aria-hidden="true"></span>
+                  <span class="theme-slider__icon theme-slider__icon--sun">{{ icon('sun', 14) }}</span>
+                  <span class="theme-slider__icon theme-slider__icon--moon">{{ icon('moon', 14) }}</span>
+                </span>
+              </button>
+            </div>
+            {% if current_user.is_authenticated %}
+              <form method="post" action="{{ url_for('auth.logout_submit') }}" class="user-menu__logout-form">
+                <button type="submit" class="user-menu__item user-menu__item--danger">
+                  <span>Sign out</span>
+                </button>
+              </form>
+            {% else %}
+              <div class="user-menu__auth">
+                <a class="user-menu__item" href="{{ url_for('auth.login_page') }}">
+                  <span>Sign in</span>
+                </a>
+                <a class="user-menu__item user-menu__item--primary" href="{{ url_for('auth.register_page') }}">
+                  <span>Register</span>
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </header>
 

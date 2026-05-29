@@ -48,6 +48,27 @@ def init_db(db_path: Path | None = None) -> None:
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS reports (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                report_type TEXT NOT NULL,
+                original_sentence TEXT NOT NULL,
+                gloss_tokens TEXT,
+                gloss_token TEXT,
+                submission_id TEXT,
+                message TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'open',
+                reporter_id INTEGER,
+                reporter_username TEXT,
+                created_at TEXT NOT NULL,
+                reviewed_at TEXT,
+                reviewed_by INTEGER,
+                admin_note TEXT,
+                FOREIGN KEY (reporter_id) REFERENCES users (id)
+            )
+            """
+        )
 
 
 def create_user(

@@ -18,6 +18,8 @@ from flask import (
 )
 from flask_login import current_user, login_required
 
+from .reports import list_reports
+from .reports import update_report_status as resolve_report
 from .submissions import (
     SubmissionRecord,
     delete_submission,
@@ -56,6 +58,7 @@ def _sync_catalog(record: SubmissionRecord | None) -> None:
             gloss=record.gloss,
             submission_id=record.id,
             video=record.video,
+            notes=record.notes,
         )
     catalog._reload()
 
@@ -102,11 +105,14 @@ def preview_video(submission_id: str):
 
 
 def _submission_counts() -> dict[str, int]:
+    from .reports import count_reports
+
     return {
         "all": len(list_submissions()),
         "pending": len(list_submissions(status="pending")),
         "approved": len(list_submissions(status="approved")),
         "rejected": len(list_submissions(status="rejected")),
+        "reports_open": count_reports(status="open"),
     }
 
 
@@ -353,4 +359,85 @@ def delete_submission_route(submission_id: str):
     return _respond_json_or_redirect(
         success_message=f"Deleted submission “{gloss}”.",
         redirect_endpoint="admin.admin_signs",
+    )
+
+
+_VALID_REPORT_FILTERS = frozenset({"open", "resolved", "dismissed", "all"})
+
+
+@admin_bp.get("/reports")
+@admin_required
+def admin_reports():
+    status_filter = request.args.get("status", "open")
+    if status_filter not in _VALID_REPORT_FILTERS:
+        status_filter = "open"
+
+    if status_filter == "all":
+        reports = list_reports()
+    else:
+        reports = list_reports(status=status_filter)  # type: ignore[arg-type]
+
+    return render_template(
+        "admin/reports.html",
+        active_page="admin",
+        admin_section="reports",
+        reports=reports,
+        status_filter=status_filter,
+        counts=_submission_counts(),
+    )
+
+
+@admin_bp.post("/reports/<int:report_id>/resolve")
+@admin_required
+def resolve_report_route(report_id: int):
+    note = (request.get_json(silent=True) or {}).get("adminNote", "")
+    if isinstance(note, str):
+        note = note.strip()
+    else:
+        note = ""
+
+    record = resolve_report(
+        report_id,
+        status="resolved",
+        reviewer_id=current_user.id,
+        admin_note=note,
+    )
+    if record is None:
+        return _respond_json_or_redirect(
+            error="Report not found.",
+            redirect_endpoint="admin.admin_reports",
+            status=404,
+        )
+
+    return _respond_json_or_redirect(
+        success_message=f"Marked report #{report_id} as resolved.",
+        redirect_endpoint="admin.admin_reports",
+    )
+
+
+@admin_bp.post("/reports/<int:report_id>/dismiss")
+@admin_required
+def dismiss_report_route(report_id: int):
+    note = (request.get_json(silent=True) or {}).get("adminNote", "")
+    if isinstance(note, str):
+        note = note.strip()
+    else:
+        note = ""
+
+    record = resolve_report(
+        report_id,
+        status="dismissed",
+        reviewer_id=current_user.id,
+        admin_note=note,
+    )
+    if record is None:
+        return _respond_json_or_redirect(
+            error="Report not found.",
+            redirect_endpoint="admin.admin_reports",
+            status=404,
+        )
+
+    return _respond_json_or_redirect(
+        success_message=f"Dismissed report #{report_id}.",
+        redirect_endpoint="admin.admin_reports",
     )

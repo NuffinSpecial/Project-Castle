@@ -19,10 +19,121 @@ function getTheme() {
   return "light";
 }
 
-function applyTheme(theme) {
-  const next = theme === "dark" ? "dark" : "light";
+const THEME_SLIDER_MS = 650;
+
+function syncHeaderThemeToggle(themeOverride, options = {}) {
+  const { animate = false } = options;
+  const toggle = document.getElementById("header-theme-toggle");
+  if (!toggle) return;
+
+  const theme =
+    themeOverride === "dark" || themeOverride === "light" ? themeOverride : getTheme();
+  const isDark = theme === "dark";
+  const wasDark = toggle.classList.contains("theme-slider--dark");
+  const menu = toggle.closest(".user-menu");
+  const thumb = toggle.querySelector(".theme-slider__thumb");
+
+  toggle.setAttribute("aria-checked", isDark ? "true" : "false");
+  toggle.setAttribute("aria-label", isDark ? "Dark mode" : "Light mode");
+  toggle.title = isDark ? "Switch to light mode" : "Switch to dark mode";
+
+  if (thumb) {
+    thumb.style.removeProperty("left");
+  }
+
+  const applyPosition = () => {
+    toggle.classList.toggle("theme-slider--dark", isDark);
+  };
+
+  if (!animate || wasDark === isDark) {
+    toggle.classList.add("theme-slider--instant");
+    applyPosition();
+    requestAnimationFrame(() => {
+      toggle.classList.remove("theme-slider--instant");
+    });
+    return;
+  }
+
+  menu?.classList.add("user-menu--theme-sliding");
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      applyPosition();
+    });
+  });
+
+  if (!thumb) {
+    menu?.classList.remove("user-menu--theme-sliding");
+    return;
+  }
+
+  const finish = () => {
+    menu?.classList.remove("user-menu--theme-sliding");
+  };
+
+  thumb.addEventListener(
+    "transitionend",
+    (event) => {
+      if (event.propertyName === "left") {
+        finish();
+      }
+    },
+    { once: true },
+  );
+  window.setTimeout(finish, THEME_SLIDER_MS + 100);
+}
+
+function commitTheme(next) {
   document.documentElement.setAttribute("data-theme", next);
   localStorage.setItem(CastleStorage.THEME, next);
+}
+
+function fadeThemeWithOverlay(next) {
+  let overlay = document.getElementById("theme-fade-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "theme-fade-overlay";
+    overlay.className = "theme-fade-overlay";
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.appendChild(overlay);
+  }
+
+  overlay.style.background = getComputedStyle(document.body).backgroundColor;
+  requestAnimationFrame(() => {
+    overlay.classList.add("theme-fade-overlay--visible");
+  });
+
+  window.setTimeout(() => {
+    commitTheme(next);
+    overlay.style.background = getComputedStyle(document.body).backgroundColor;
+    overlay.classList.remove("theme-fade-overlay--visible");
+  }, 280);
+}
+
+function applyTheme(theme, options = {}) {
+  const { animate = true } = options;
+  const next = theme === "dark" ? "dark" : "light";
+  if (getTheme() === next) {
+    syncHeaderThemeToggle(next, { animate: false });
+    return;
+  }
+
+  if (!animate) {
+    commitTheme(next);
+    syncHeaderThemeToggle(next, { animate: false });
+    return;
+  }
+
+  syncHeaderThemeToggle(next, { animate: true });
+
+  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReduced) {
+    commitTheme(next);
+    return;
+  }
+
+  // Let the slider move on screen before the page fade covers it.
+  window.setTimeout(() => fadeThemeWithOverlay(next), 280);
 }
 
 function getPhrase() {
@@ -125,11 +236,18 @@ function initPhraseBar(options = {}) {
     renderHistoryDropdown();
     if (!dropdown.children.length) return;
     dropdown.hidden = false;
+    requestAnimationFrame(() => dropdown.classList.add("is-open"));
     input.setAttribute("aria-expanded", "true");
   }
 
   function closeHistoryDropdown() {
-    dropdown.hidden = true;
+    dropdown.classList.remove("is-open");
+    const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 520;
+    window.setTimeout(() => {
+      if (!dropdown.classList.contains("is-open")) {
+        dropdown.hidden = true;
+      }
+    }, duration);
     input.setAttribute("aria-expanded", "false");
   }
 
@@ -183,9 +301,67 @@ async function fetchTranslation(phrase) {
   return data;
 }
 
+function setAnimatedPanel(panel, open, visibleClass = "is-open") {
+  if (!panel) return;
+  const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 520;
+
+  if (open) {
+    panel.hidden = false;
+    requestAnimationFrame(() => panel.classList.add(visibleClass));
+    return;
+  }
+
+  panel.classList.remove(visibleClass);
+  window.setTimeout(() => {
+    if (!panel.classList.contains(visibleClass)) {
+      panel.hidden = true;
+    }
+  }, duration);
+}
+
+function initUserMenu() {
+  const menu = document.querySelector("[data-user-menu]");
+  const trigger = document.getElementById("user-menu-trigger");
+  const panel = document.getElementById("user-menu-panel");
+  if (!menu || !trigger || !panel) return;
+
+  function setOpen(open) {
+    setAnimatedPanel(panel, open);
+    trigger.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  trigger.addEventListener("click", (event) => {
+    event.stopPropagation();
+    setOpen(!panel.classList.contains("is-open"));
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!menu.contains(event.target)) {
+      setOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      setOpen(false);
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  applyTheme(getTheme());
+  const initialTheme = getTheme();
+  applyTheme(initialTheme, { animate: false });
+  initUserMenu();
+
+  document.getElementById("header-theme-toggle")?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const next = getTheme() === "dark" ? "light" : "dark";
+    applyTheme(next);
+  });
+
   requestAnimationFrame(() => {
-    document.body.classList.add("is-ready");
+    requestAnimationFrame(() => {
+      document.body.classList.add("is-ready");
+    });
   });
 });
